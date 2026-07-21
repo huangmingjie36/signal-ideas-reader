@@ -13,10 +13,12 @@ export function SignalApp({ posts }: { posts: Post[] }) {
   const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/favorites")
-      .then((response) => (response.ok ? response.json() : { ids: [] }))
-      .then((data: { ids?: string[] }) => setFavorites(new Set(data.ids ?? [])))
-      .catch(() => undefined);
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("signal-favorites") ?? "[]") as string[];
+      setFavorites(new Set(saved));
+    } catch {
+      setFavorites(new Set());
+    }
   }, []);
 
   useEffect(() => {
@@ -46,26 +48,14 @@ export function SignalApp({ posts }: { posts: Post[] }) {
     });
   }
 
-  async function toggleFavorite(id: string) {
+  function toggleFavorite(id: string) {
     const shouldSave = !favorites.has(id);
     setFavorites((current) => {
       const next = new Set(current);
       shouldSave ? next.add(id) : next.delete(id);
+      window.localStorage.setItem("signal-favorites", JSON.stringify([...next]));
       return next;
     });
-    try {
-      await fetch("/api/favorites", {
-        method: shouldSave ? "POST" : "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ postId: id }),
-      });
-    } catch {
-      setFavorites((current) => {
-        const next = new Set(current);
-        shouldSave ? next.delete(id) : next.add(id);
-        return next;
-      });
-    }
   }
 
   function openSaved(post: Post) {
