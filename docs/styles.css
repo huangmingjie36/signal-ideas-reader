@@ -1,0 +1,232 @@
+:root {
+  --ink: #11110f;
+  --paper: #f2eddf;
+  --amber: #dca85e;
+  --sage: #87917d;
+  --muted: #aaa497;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, a { -webkit-tap-highlight-color: transparent; }
+button { font: inherit; }
+
+.app-shell {
+  width: min(100%, 540px);
+  height: 100dvh;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 14%, rgba(220, 168, 94, .09), transparent 28%),
+    var(--ink);
+}
+
+.topbar {
+  position: absolute;
+  z-index: 20;
+  inset: env(safe-area-inset-top, 0) 0 auto;
+  height: 76px;
+  padding: 24px 22px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.wordmark { letter-spacing: .34em; font-size: 12px; font-weight: 700; }
+.progress { font-size: 11px; color: var(--muted); letter-spacing: .12em; }
+
+.feed {
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+.feed::-webkit-scrollbar { display: none; }
+
+.card {
+  position: relative;
+  height: 100dvh;
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: calc(94px + env(safe-area-inset-top, 0px)) 26px calc(106px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.author {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(242, 237, 223, .22);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.author strong { display: block; color: var(--paper); font-size: 13px; font-weight: 600; }
+
+.quote-area {
+  border: 0;
+  padding: 24px 0;
+  text-align: left;
+  color: inherit;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.quote {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(27px, 7.6vw, 43px);
+  line-height: 1.22;
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+
+.translation {
+  margin: 22px 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid rgba(242, 237, 223, .14);
+  font-size: clamp(17px, 4.8vw, 22px);
+  line-height: 1.7;
+  color: #d8d3c7;
+  animation: rise .24s ease-out;
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+.tap-hint {
+  margin-top: 20px;
+  color: #77736b;
+  font-size: 11px;
+  letter-spacing: .12em;
+}
+
+.card-footer { display: flex; justify-content: space-between; align-items: flex-end; }
+.meta { color: #77736b; font-size: 11px; line-height: 1.65; }
+.source-link { color: var(--muted); text-decoration: none; border-bottom: 1px solid #55524c; }
+
+.like {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 237, 223, .16);
+  background: rgba(242, 237, 223, .05);
+  color: var(--paper);
+  font-size: 23px;
+  cursor: pointer;
+  transition: transform .16s ease, color .16s ease, background .16s ease;
+}
+.like:active { transform: scale(.9); }
+.like.active { color: var(--amber); background: rgba(220, 168, 94, .13); border-color: rgba(220, 168, 94, .35); }
+
+.bottom-nav {
+  position: absolute;
+  z-index: 30;
+  left: 14px;
+  right: 14px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  height: 66px;
+  padding: 8px 12px;
+  border: 1px solid rgba(242, 237, 223, .12);
+  border-radius: 22px;
+  background: rgba(24, 24, 21, .88);
+  backdrop-filter: blur(18px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.nav-button {
+  border: 0;
+  background: none;
+  color: #77736b;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  font-size: 10px;
+  cursor: pointer;
+}
+.nav-icon { font-size: 19px; line-height: 1; }
+.nav-button.active { color: var(--paper); }
+
+.panel {
+  height: 100dvh;
+  padding: calc(92px + env(safe-area-inset-top, 0px)) 22px calc(94px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+}
+.panel h1 { font-family: Georgia, "Times New Roman", serif; font-size: 36px; margin: 0 0 8px; }
+.panel-lead { color: var(--muted); margin: 0 0 30px; font-size: 14px; }
+
+.saved-list { display: grid; gap: 12px; }
+.saved-card {
+  width: 100%;
+  border: 1px solid rgba(242, 237, 223, .11);
+  border-radius: 18px;
+  padding: 19px;
+  background: rgba(242, 237, 223, .035);
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+.saved-card p { font-family: Georgia, "Times New Roman", serif; font-size: 18px; line-height: 1.45; margin: 0 0 13px; }
+.saved-card span { color: var(--muted); font-size: 11px; }
+
+.empty { color: var(--muted); text-align: center; margin-top: 32vh; }
+
+.author-card {
+  border: 1px solid rgba(242, 237, 223, .12);
+  border-radius: 24px;
+  padding: 22px;
+  background: rgba(242, 237, 223, .04);
+}
+.author-card-head { display: flex; gap: 15px; align-items: center; }
+.author-card .avatar { width: 48px; height: 48px; font-size: 17px; }
+.author-card h2 { margin: 0 0 4px; font-size: 18px; }
+.author-card p { color: var(--muted); font-size: 13px; line-height: 1.65; margin: 18px 0 0; }
+.status-pill { display: inline-block; margin-top: 18px; padding: 7px 10px; border-radius: 99px; background: rgba(135,145,125,.15); color: #aeb8a4; font-size: 11px; }
+
+.add-author {
+  width: 100%; margin-top: 14px; border: 1px dashed rgba(242,237,223,.18); border-radius: 20px;
+  padding: 20px; color: var(--muted); background: none; text-align: left;
+}
+.add-author strong { color: var(--paper); display: block; margin-bottom: 5px; }
+
+@media (min-width: 700px) {
+  body { background: #080806; }
+  .app-shell { border-left: 1px solid #24231f; border-right: 1px solid #24231f; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .translation { animation: none; }
+  .feed { scroll-behavior: auto; }
+}
