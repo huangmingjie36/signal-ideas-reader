@@ -10,6 +10,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
   const [translated, setTranslated] = useState<Set<string>>(new Set());
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [activeIndex, setActiveIndex] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(80);
   const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,7 +29,11 @@ export function SignalApp({ posts }: { posts: Post[] }) {
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-            setActiveIndex(Number((entry.target as HTMLElement).dataset.index ?? 0));
+            const index = Number((entry.target as HTMLElement).dataset.index ?? 0);
+            setActiveIndex(index);
+            if (index >= visibleCount - 8) {
+              setVisibleCount((current) => Math.min(posts.length, current + 80));
+            }
           }
         }
       },
@@ -36,7 +41,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
     );
     feed.querySelectorAll("[data-index]").forEach((card) => observer.observe(card));
     return () => observer.disconnect();
-  }, [tab]);
+  }, [posts.length, tab, visibleCount]);
 
   const savedPosts = useMemo(() => posts.filter((post) => favorites.has(post.id)), [favorites, posts]);
 
@@ -59,6 +64,8 @@ export function SignalApp({ posts }: { posts: Post[] }) {
   }
 
   function openSaved(post: Post) {
+    const index = posts.findIndex((item) => item.id === post.id);
+    setVisibleCount((current) => Math.max(current, index + 1));
     setTab("feed");
     window.setTimeout(() => {
       document.getElementById(`post-${post.id}`)?.scrollIntoView({ block: "start" });
@@ -74,7 +81,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
 
       {tab === "feed" && (
         <div className="feed" ref={feedRef} aria-label="思想卡片流">
-          {posts.map((post, index) => (
+          {posts.slice(0, visibleCount).map((post, index) => (
             <article className="card" data-index={index} id={`post-${post.id}`} key={post.id}>
               <div className="author">
                 <span className="avatar">DK</span>
@@ -89,7 +96,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
 
               <footer className="card-footer">
                 <div className="meta">
-                  {post.date} · 忠实摘要<br />
+                  {post.date} · {post.kind === "summary" ? "忠实摘要" : "原文摘录"}<br />
                   <a className="source-link" href={post.sourceUrl} target="_blank" rel="noreferrer">查看原帖 ↗</a>
                 </div>
                 <button className={`like ${favorites.has(post.id) ? "active" : ""}`} onClick={() => toggleFavorite(post.id)} aria-label={favorites.has(post.id) ? "取消收藏" : "收藏"}>
@@ -123,7 +130,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
           <p className="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p>
           <div className="author-card">
             <div className="author-card-head"><span className="avatar">DK</span><div><h2>Dan Koe</h2><span className="meta">@thedankoe</span></div></div>
-            <p>已整理 {posts.length} 条近两年高价值内容，覆盖 2024 年 7 月至 2026 年 7 月。卡片为忠实英文摘要，并保留原帖入口。</p>
+            <p>已同步 {posts.length} 条近两年公开原创内容。每天自动检查更新；卡片显示忠实摘要或原文摘录，并保留原帖入口。</p>
             <span className="status-pill">● 已启用</span>
           </div>
           <div className="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div>

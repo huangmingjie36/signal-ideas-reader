@@ -1,4 +1,4 @@
-const CACHE = "signal-v2";
+const CACHE = "signal-v3";
 const ASSETS = ["./", "./index.html", "./styles.css", "./app.js", "./posts.json", "./manifest.webmanifest", "./og.png"];
 
 self.addEventListener("install", (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS))));

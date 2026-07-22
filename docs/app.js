@@ -3,6 +3,7 @@ let posts = [];
 const app = document.querySelector("#app");
 let tab = "feed";
 let activeIndex = 0;
+let visibleCount = 80;
 let translated = new Set();
 let favorites = loadFavorites();
 
@@ -26,7 +27,7 @@ function render() {
 }
 
 function feedHtml() {
-  return `<div class="feed" aria-label="思想卡片流">${posts.map((post, index) => `
+  return `<div class="feed" aria-label="思想卡片流">${posts.slice(0, visibleCount).map((post, index) => `
     <article class="card" data-index="${index}" id="post-${post.id}">
       <div class="author"><span class="avatar">DK</span><span><strong>${post.author}</strong>${post.handle}</span></div>
       <button class="quote-area" data-translate="${post.id}" aria-label="显示或隐藏中文翻译">
@@ -34,7 +35,7 @@ function feedHtml() {
         ${translated.has(post.id) ? `<p class="translation" lang="zh-CN">${post.zh}</p>` : ""}
         <span class="tap-hint">${translated.has(post.id) ? "轻点收起中文" : "轻点查看中文"}</span>
       </button>
-      <footer class="card-footer"><div class="meta">${post.date} · 忠实摘要<br><a class="source-link" href="${post.sourceUrl}" target="_blank" rel="noreferrer">查看原帖 ↗</a></div>
+      <footer class="card-footer"><div class="meta">${post.date} · ${post.kind === "summary" ? "忠实摘要" : "原文摘录"}<br><a class="source-link" href="${post.sourceUrl}" target="_blank" rel="noreferrer">查看原帖 ↗</a></div>
       <button class="like ${favorites.has(post.id) ? "active" : ""}" data-favorite="${post.id}" aria-label="${favorites.has(post.id) ? "取消收藏" : "收藏"}">${favorites.has(post.id) ? "♥" : "♡"}</button></footer>
     </article>`).join("")}</div>`;
 }
@@ -45,7 +46,7 @@ function savedHtml() {
 }
 
 function authorsHtml() {
-  return `<section class="panel"><h1>作者</h1><p class="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p><div class="author-card"><div class="author-card-head"><span class="avatar">DK</span><div><h2>Dan Koe</h2><span class="meta">@thedankoe</span></div></div><p>已整理 ${posts.length} 条近两年高价值内容，覆盖 2024 年 7 月至 2026 年 7 月。卡片为忠实英文摘要，并保留原帖入口。</p><span class="status-pill">● 已启用</span></div><div class="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div></section>`;
+  return `<section class="panel"><h1>作者</h1><p class="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p><div class="author-card"><div class="author-card-head"><span class="avatar">DK</span><div><h2>Dan Koe</h2><span class="meta">@thedankoe</span></div></div><p>已同步 ${posts.length} 条近两年公开原创内容。每天自动检查更新；卡片显示忠实摘要或原文摘录，并保留原帖入口。</p><span class="status-pill">● 每日自动同步</span></div><div class="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div></section>`;
 }
 
 function navButton(name, icon, label) {
@@ -56,16 +57,36 @@ function bindEvents() {
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => { tab = button.dataset.tab; render(); }));
   document.querySelectorAll("[data-translate]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.translate; translated.has(id) ? translated.delete(id) : translated.add(id); render(); document.querySelector(`#post-${id}`).scrollIntoView(); }));
   document.querySelectorAll("[data-favorite]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.favorite; favorites.has(id) ? favorites.delete(id) : favorites.add(id); localStorage.setItem("signal-favorites", JSON.stringify([...favorites])); render(); document.querySelector(`#post-${id}`).scrollIntoView(); }));
-  document.querySelectorAll("[data-open]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.open; tab = "feed"; render(); document.querySelector(`#post-${id}`).scrollIntoView(); }));
+  document.querySelectorAll("[data-open]").forEach((button) => button.addEventListener("click", () => {
+    const id = button.dataset.open;
+    const index = posts.findIndex((post) => post.id === id);
+    visibleCount = Math.max(visibleCount, index + 1);
+    tab = "feed";
+    render();
+    document.querySelector(`#post-${id}`)?.scrollIntoView();
+  }));
   const feed = document.querySelector(".feed");
-  if (feed) feed.addEventListener("scroll", () => { const next = Math.round(feed.scrollTop / feed.clientHeight); if (next !== activeIndex && next >= 0 && next < posts.length) { activeIndex = next; const progress = document.querySelector(".progress"); if (progress) progress.textContent = `${String(activeIndex + 1).padStart(2, "0")} / ${String(posts.length).padStart(2, "0")}`; } }, { passive: true });
+  if (feed) feed.addEventListener("scroll", () => {
+    const next = Math.round(feed.scrollTop / feed.clientHeight);
+    if (next !== activeIndex && next >= 0 && next < posts.length) {
+      activeIndex = next;
+      const progress = document.querySelector(".progress");
+      if (progress) progress.textContent = `${String(activeIndex + 1).padStart(2, "0")} / ${String(posts.length).padStart(2, "0")}`;
+    }
+    if (next >= visibleCount - 8 && visibleCount < posts.length) {
+      const currentId = posts[next]?.id;
+      visibleCount = Math.min(posts.length, visibleCount + 80);
+      render();
+      requestAnimationFrame(() => document.querySelector(`#post-${currentId}`)?.scrollIntoView());
+    }
+  }, { passive: true });
 }
 
 app.innerHTML = `<div class="empty">正在装入思想库…</div>`;
 fetch("posts.json")
   .then((response) => response.json())
   .then((data) => {
-    posts = data.map((post) => ({ ...post, author: "Dan Koe", handle: "@thedankoe", sourceUrl: `https://x.com/thedankoe/status/${post.id}` }));
+    posts = data.map((post) => ({ ...post, kind: post.kind || "summary", author: "Dan Koe", handle: "@thedankoe", sourceUrl: `https://x.com/thedankoe/status/${post.id}` }));
     render();
   })
   .catch(() => { app.innerHTML = `<div class="empty">内容载入失败，请刷新页面。</div>`; });

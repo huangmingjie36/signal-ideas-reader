@@ -8,7 +8,7 @@ export type Post = {
   text: string;
   zh: string;
   sourceUrl: string;
-  kind: "summary";
+  kind: "summary" | "excerpt";
 };
 
 export const posts: Post[] = rawPosts.map((post) => ({
@@ -16,5 +16,5 @@ export const posts: Post[] = rawPosts.map((post) => ({
   author: "Dan Koe",
   handle: "@thedankoe",
   sourceUrl: `https://x.com/thedankoe/status/${post.id}`,
-  kind: "summary" as const,
+  kind: post.kind === "excerpt" ? "excerpt" as const : "summary" as const,
 }));
