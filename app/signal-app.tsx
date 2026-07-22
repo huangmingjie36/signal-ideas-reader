@@ -6,12 +6,17 @@ import type { Post } from "../lib/posts";
 type Tab = "feed" | "saved" | "authors";
 
 export function SignalApp({ posts }: { posts: Post[] }) {
+  const [shuffledPosts, setShuffledPosts] = useState(posts);
   const [tab, setTab] = useState<Tab>("feed");
   const [translated, setTranslated] = useState<Set<string>>(new Set());
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [activeIndex, setActiveIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(80);
   const feedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setShuffledPosts(shuffle(posts));
+  }, [posts]);
 
   useEffect(() => {
     try {
@@ -32,7 +37,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
             const index = Number((entry.target as HTMLElement).dataset.index ?? 0);
             setActiveIndex(index);
             if (index >= visibleCount - 8) {
-              setVisibleCount((current) => Math.min(posts.length, current + 80));
+              setVisibleCount((current) => Math.min(shuffledPosts.length, current + 80));
             }
           }
         }
@@ -41,9 +46,9 @@ export function SignalApp({ posts }: { posts: Post[] }) {
     );
     feed.querySelectorAll("[data-index]").forEach((card) => observer.observe(card));
     return () => observer.disconnect();
-  }, [posts.length, tab, visibleCount]);
+  }, [shuffledPosts.length, tab, visibleCount]);
 
-  const savedPosts = useMemo(() => posts.filter((post) => favorites.has(post.id)), [favorites, posts]);
+  const savedPosts = useMemo(() => shuffledPosts.filter((post) => favorites.has(post.id)), [favorites, shuffledPosts]);
 
   function toggleTranslation(id: string) {
     setTranslated((current) => {
@@ -64,7 +69,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
   }
 
   function openSaved(post: Post) {
-    const index = posts.findIndex((item) => item.id === post.id);
+    const index = shuffledPosts.findIndex((item) => item.id === post.id);
     setVisibleCount((current) => Math.max(current, index + 1));
     setTab("feed");
     window.setTimeout(() => {
@@ -76,12 +81,12 @@ export function SignalApp({ posts }: { posts: Post[] }) {
     <main className="app-shell">
       <header className="topbar">
         <span className="wordmark">SIGNAL</span>
-        {tab === "feed" && <span className="progress">{String(activeIndex + 1).padStart(2, "0")} / {String(posts.length).padStart(2, "0")}</span>}
+        {tab === "feed" && <span className="progress">{String(activeIndex + 1).padStart(2, "0")} / {String(shuffledPosts.length).padStart(2, "0")}</span>}
       </header>
 
       {tab === "feed" && (
         <div className="feed" ref={feedRef} aria-label="思想卡片流">
-          {posts.slice(0, visibleCount).map((post, index) => (
+          {shuffledPosts.slice(0, visibleCount).map((post, index) => (
             <article className="card" data-index={index} id={`post-${post.id}`} key={post.id}>
               <div className="author">
                 <span className="avatar">DK</span>
@@ -130,7 +135,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
           <p className="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p>
           <div className="author-card">
             <div className="author-card-head"><span className="avatar">DK</span><div><h2>Dan Koe</h2><span className="meta">@thedankoe</span></div></div>
-            <p>已同步 {posts.length} 条近两年公开原创内容。每天自动检查更新；卡片显示完整原文和中文翻译，并保留原帖入口。</p>
+            <p>已同步 {shuffledPosts.length} 条近两年公开原创内容。每次打开都会随机洗牌；卡片显示完整原文和中文翻译，并保留原帖入口。</p>
             <span className="status-pill">● 已启用</span>
           </div>
           <div className="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div>
@@ -144,4 +149,16 @@ export function SignalApp({ posts }: { posts: Post[] }) {
       </nav>
     </main>
   );
+}
+
+function shuffle<T>(items: T[]) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]];
+  }
+  if (shuffled.length > 1 && shuffled[0] === items[0]) {
+    [shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]];
+  }
+  return shuffled;
 }

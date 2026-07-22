@@ -16,6 +16,18 @@ function escapeHtml(value) {
   return value.replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
 }
 
+function shuffle(items) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]];
+  }
+  if (shuffled.length > 1 && shuffled[0] === items[0]) {
+    [shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]];
+  }
+  return shuffled;
+}
+
 function render() {
   app.innerHTML = `
     <header class="topbar"><span class="wordmark">SIGNAL</span>${tab === "feed" ? `<span class="progress">${String(activeIndex + 1).padStart(2, "0")} / ${String(posts.length).padStart(2, "0")}</span>` : ""}</header>
@@ -46,7 +58,7 @@ function savedHtml() {
 }
 
 function authorsHtml() {
-  return `<section class="panel"><h1>作者</h1><p class="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p><div class="author-card"><div class="author-card-head"><span class="avatar">DK</span><div><h2>Dan Koe</h2><span class="meta">@thedankoe</span></div></div><p>已同步 ${posts.length} 条近两年公开原创内容。每天自动检查更新；卡片显示完整原文和中文翻译，并保留原帖入口。</p><span class="status-pill">● 每日自动同步</span></div><div class="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div></section>`;
+  return `<section class="panel"><h1>作者</h1><p class="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p><div class="author-card"><div class="author-card-head"><span class="avatar">DK</span><div><h2>Dan Koe</h2><span class="meta">@thedankoe</span></div></div><p>已同步 ${posts.length} 条近两年公开原创内容。每次打开都会随机洗牌；卡片显示完整原文和中文翻译，并保留原帖入口。</p><span class="status-pill">● 每日自动同步</span></div><div class="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div></section>`;
 }
 
 function navButton(name, icon, label) {
@@ -86,7 +98,7 @@ app.innerHTML = `<div class="empty">正在装入思想库…</div>`;
 fetch("posts.json")
   .then((response) => response.json())
   .then((data) => {
-    posts = data.map((post) => ({ ...post, kind: post.kind || "summary", author: "Dan Koe", handle: "@thedankoe", sourceUrl: `https://x.com/thedankoe/status/${post.id}` }));
+    posts = shuffle(data.map((post) => ({ ...post, kind: post.kind || "summary", author: "Dan Koe", handle: "@thedankoe", sourceUrl: `https://x.com/thedankoe/status/${post.id}` })));
     render();
   })
   .catch(() => { app.innerHTML = `<div class="empty">内容载入失败，请刷新页面。</div>`; });
