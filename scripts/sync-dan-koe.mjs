@@ -19,7 +19,7 @@ twoYearsAgo.setUTCHours(0, 0, 0, 0);
 const existing = JSON.parse(await readFile(publicPath, "utf8"));
 const existingById = new Map(existing.map((post) => [post.id, post]));
 
-const html = await fetchText(profileUrl);
+const html = await fetchProfile();
 const cursorMatch = html.match(/class="add-nw-event"[\s\S]*?data-cursor="([^"]+)"[\s\S]*?data-query="([^"]+)"[\s\S]*?data-ec="([^"]+)"/);
 if (!cursorMatch) throw new Error("Could not locate the public profile cursor");
 
@@ -135,6 +135,15 @@ async function fetchText(url) {
   throw new Error(`Request failed: ${url}`);
 }
 
+async function fetchProfile() {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const html = await fetchText(`${profileUrl}?signal_sync=${Date.now()}-${attempt}`);
+    if (html.includes("data-cursor=") && html.includes("data-query=")) return html;
+    await delay(attempt * 1800);
+  }
+  throw new Error("Could not load the public profile feed");
+}
+
 function parseProfileHtml(source) {
   const items = [];
   const pattern = /<a href="\/thedankoe\/status\/(\d+)">[^<]+<\/a>[\s\S]*?<div class="activity-descp">\s*<p>([\s\S]*?)<\/p>/g;
@@ -231,6 +240,7 @@ async function curl(url, extraArgs = []) {
     "--show-error",
     "--location",
     "--max-time", "30",
+    "--user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/138.0.0.0 Safari/537.36",
     "--retry", "5",
     "--retry-all-errors",
     "--retry-delay", "1",
