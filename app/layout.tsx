@@ -23,6 +23,10 @@ export const metadata: Metadata = {
     title: "Signal",
   },
   formatDetection: { telephone: false },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-180.png",
+  },
   openGraph: {
     title: "Signal — Ideas worth your attention.",
     description: "A private, distraction-free stream of high-quality ideas.",

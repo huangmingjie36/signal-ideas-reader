@@ -88,7 +88,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
                 <span><strong>{post.author}</strong>{post.handle}</span>
               </div>
 
-              <button className="quote-area" onClick={() => toggleTranslation(post.id)} aria-label="显示或隐藏中文翻译">
+              <button className={`quote-area ${post.text.length > 220 ? "very-long" : post.text.length > 150 ? "long" : ""}`} onClick={() => toggleTranslation(post.id)} aria-label="显示或隐藏中文翻译">
                 <p className="quote">{post.text}</p>
                 {translated.has(post.id) && <p className="translation" lang="zh-CN">{post.zh}</p>}
                 <span className="tap-hint">{translated.has(post.id) ? "轻点收起中文" : "轻点查看中文"}</span>
@@ -96,7 +96,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
 
               <footer className="card-footer">
                 <div className="meta">
-                  {post.date} · {post.kind === "summary" ? "忠实摘要" : "原文摘录"}<br />
+                  {post.date} · {post.kind === "full" ? "完整原文" : post.kind === "summary" ? "忠实摘要" : "原文摘录"}<br />
                   <a className="source-link" href={post.sourceUrl} target="_blank" rel="noreferrer">查看原帖 ↗</a>
                 </div>
                 <button className={`like ${favorites.has(post.id) ? "active" : ""}`} onClick={() => toggleFavorite(post.id)} aria-label={favorites.has(post.id) ? "取消收藏" : "收藏"}>
@@ -130,7 +130,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
           <p className="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p>
           <div className="author-card">
             <div className="author-card-head"><span className="avatar">DK</span><div><h2>Dan Koe</h2><span className="meta">@thedankoe</span></div></div>
-            <p>已同步 {posts.length} 条近两年公开原创内容。每天自动检查更新；卡片显示忠实摘要或原文摘录，并保留原帖入口。</p>
+            <p>已同步 {posts.length} 条近两年公开原创内容。每天自动检查更新；卡片显示完整原文和中文翻译，并保留原帖入口。</p>
             <span className="status-pill">● 已启用</span>
           </div>
           <div className="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div>

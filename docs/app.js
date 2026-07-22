@@ -30,12 +30,12 @@ function feedHtml() {
   return `<div class="feed" aria-label="思想卡片流">${posts.slice(0, visibleCount).map((post, index) => `
     <article class="card" data-index="${index}" id="post-${post.id}">
       <div class="author"><span class="avatar">DK</span><span><strong>${post.author}</strong>${post.handle}</span></div>
-      <button class="quote-area" data-translate="${post.id}" aria-label="显示或隐藏中文翻译">
+      <button class="quote-area ${post.text.length > 220 ? "very-long" : post.text.length > 150 ? "long" : ""}" data-translate="${post.id}" aria-label="显示或隐藏中文翻译">
         <p class="quote">${escapeHtml(post.text)}</p>
         ${translated.has(post.id) ? `<p class="translation" lang="zh-CN">${post.zh}</p>` : ""}
         <span class="tap-hint">${translated.has(post.id) ? "轻点收起中文" : "轻点查看中文"}</span>
       </button>
-      <footer class="card-footer"><div class="meta">${post.date} · ${post.kind === "summary" ? "忠实摘要" : "原文摘录"}<br><a class="source-link" href="${post.sourceUrl}" target="_blank" rel="noreferrer">查看原帖 ↗</a></div>
+      <footer class="card-footer"><div class="meta">${post.date} · ${post.kind === "full" ? "完整原文" : post.kind === "summary" ? "忠实摘要" : "原文摘录"}<br><a class="source-link" href="${post.sourceUrl}" target="_blank" rel="noreferrer">查看原帖 ↗</a></div>
       <button class="like ${favorites.has(post.id) ? "active" : ""}" data-favorite="${post.id}" aria-label="${favorites.has(post.id) ? "取消收藏" : "收藏"}">${favorites.has(post.id) ? "♥" : "♡"}</button></footer>
     </article>`).join("")}</div>`;
 }
@@ -46,7 +46,7 @@ function savedHtml() {
 }
 
 function authorsHtml() {
-  return `<section class="panel"><h1>作者</h1><p class="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p><div class="author-card"><div class="author-card-head"><span class="avatar">DK</span><div><h2>Dan Koe</h2><span class="meta">@thedankoe</span></div></div><p>已同步 ${posts.length} 条近两年公开原创内容。每天自动检查更新；卡片显示忠实摘要或原文摘录，并保留原帖入口。</p><span class="status-pill">● 每日自动同步</span></div><div class="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div></section>`;
+  return `<section class="panel"><h1>作者</h1><p class="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p><div class="author-card"><div class="author-card-head"><span class="avatar">DK</span><div><h2>Dan Koe</h2><span class="meta">@thedankoe</span></div></div><p>已同步 ${posts.length} 条近两年公开原创内容。每天自动检查更新；卡片显示完整原文和中文翻译，并保留原帖入口。</p><span class="status-pill">● 每日自动同步</span></div><div class="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div></section>`;
 }
 
 function navButton(name, icon, label) {
