@@ -193,9 +193,13 @@ async function loadCachedPages() {
 }
 
 function cleanText(value) {
-  return decodeEntities(value.replace(/<[^>]+>/g, " "))
-    .replace(/https?:\/\/t\.co\/\S+/g, "")
-    .replace(/\s+/g, " ")
+  return decodeEntities(value.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<[^>]+>/g, ""))
+    .replace(/https?:\/\/t\.co\/[^\s<]+/g, "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/[\t ]+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 

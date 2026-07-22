@@ -126,7 +126,8 @@ button { font: inherit; }
   font-size: clamp(27px, 7.6vw, 43px);
   line-height: 1.22;
   letter-spacing: -.025em;
-  text-wrap: balance;
+  white-space: pre-wrap;
+  text-wrap: pretty;
   overflow-wrap: anywhere;
 }
 
