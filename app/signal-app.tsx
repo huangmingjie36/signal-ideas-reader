@@ -89,7 +89,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
 
               <footer className="card-footer">
                 <div className="meta">
-                  {post.date}<br />
+                  {post.date} · 忠实摘要<br />
                   <a className="source-link" href={post.sourceUrl} target="_blank" rel="noreferrer">查看原帖 ↗</a>
                 </div>
                 <button className={`like ${favorites.has(post.id) ? "active" : ""}`} onClick={() => toggleFavorite(post.id)} aria-label={favorites.has(post.id) ? "取消收藏" : "收藏"}>
@@ -123,7 +123,7 @@ export function SignalApp({ posts }: { posts: Post[] }) {
           <p className="panel-lead">你的高质量信息源，会慢慢长成一座私人思想库。</p>
           <div className="author-card">
             <div className="author-card-head"><span className="avatar">DK</span><div><h2>Dan Koe</h2><span className="meta">@thedankoe</span></div></div>
-            <p>首版收录 12 条带原帖链接的精选试读。完整近两年历史内容需要通过授权的 X 数据导出或接口批量导入。</p>
+            <p>已整理 {posts.length} 条近两年高价值内容，覆盖 2024 年 7 月至 2026 年 7 月。卡片为忠实英文摘要，并保留原帖入口。</p>
             <span className="status-pill">● 已启用</span>
           </div>
           <div className="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div>
