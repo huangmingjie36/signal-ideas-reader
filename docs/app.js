@@ -4,7 +4,7 @@ const app = document.querySelector("#app");
 let tab = "feed";
 let activeIndex = 0;
 let visibleCount = 80;
-let translated = new Set();
+let activeTranslationId = null;
 let favorites = loadFavorites();
 
 function loadFavorites() {
@@ -32,6 +32,7 @@ function render() {
   app.innerHTML = `
     <header class="topbar"><span class="wordmark">SIGNAL</span>${tab === "feed" ? `<span class="progress">${String(activeIndex + 1).padStart(2, "0")} / ${String(posts.length).padStart(2, "0")}</span>` : ""}</header>
     ${tab === "feed" ? feedHtml() : tab === "saved" ? savedHtml() : authorsHtml()}
+    ${translationHtml()}
     <nav class="bottom-nav" aria-label="主导航">
       ${navButton("feed", "◉", "阅读")}${navButton("saved", "♡", "喜欢")}${navButton("authors", "◎", "作者")}
     </nav>`;
@@ -42,14 +43,22 @@ function feedHtml() {
   return `<div class="feed" aria-label="思想卡片流">${posts.slice(0, visibleCount).map((post, index) => `
     <article class="card" data-index="${index}" id="post-${post.id}">
       <div class="author"><span class="avatar">DK</span><span><strong>${post.author}</strong>${post.handle}</span></div>
-      <button class="quote-area ${post.text.length > 220 ? "very-long" : post.text.length > 150 ? "long" : ""}" data-translate="${post.id}" aria-label="显示或隐藏中文翻译">
+      <button class="quote-area ${post.text.length > 220 ? "very-long" : post.text.length > 150 ? "long" : ""}" data-translate="${post.id}" aria-label="查看完整中文翻译">
         <p class="quote">${escapeHtml(post.text)}</p>
-        ${translated.has(post.id) ? `<p class="translation" lang="zh-CN">${post.zh}</p>` : ""}
-        <span class="tap-hint">${translated.has(post.id) ? "轻点收起中文" : "轻点查看中文"}</span>
+        <span class="tap-hint">轻点查看完整中文</span>
       </button>
       <footer class="card-footer"><div class="meta">${post.date} · ${post.kind === "full" ? "完整原文" : post.kind === "summary" ? "忠实摘要" : "原文摘录"}<br><a class="source-link" href="${post.sourceUrl}" target="_blank" rel="noreferrer">查看原帖 ↗</a></div>
       <button class="like ${favorites.has(post.id) ? "active" : ""}" data-favorite="${post.id}" aria-label="${favorites.has(post.id) ? "取消收藏" : "收藏"}">${favorites.has(post.id) ? "♥" : "♡"}</button></footer>
     </article>`).join("")}</div>`;
+}
+
+function translationHtml() {
+  const post = posts.find((item) => item.id === activeTranslationId);
+  if (!post) return "";
+  return `<section class="translation-sheet" role="dialog" aria-modal="true" aria-label="完整中文翻译">
+    <button class="translation-close" data-close-translation aria-label="关闭中文翻译">×</button>
+    <div class="translation-content"><span class="translation-label">中文全文</span><p class="translation-text" lang="zh-CN">${escapeHtml(post.zh)}</p><button class="translation-done" data-close-translation>读完了</button></div>
+  </section>`;
 }
 
 function savedHtml() {
@@ -67,7 +76,8 @@ function navButton(name, icon, label) {
 
 function bindEvents() {
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => { tab = button.dataset.tab; render(); }));
-  document.querySelectorAll("[data-translate]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.translate; translated.has(id) ? translated.delete(id) : translated.add(id); render(); document.querySelector(`#post-${id}`).scrollIntoView(); }));
+  document.querySelectorAll("[data-translate]").forEach((button) => button.addEventListener("click", () => { activeTranslationId = button.dataset.translate; render(); }));
+  document.querySelectorAll("[data-close-translation]").forEach((button) => button.addEventListener("click", () => { const id = activeTranslationId; activeTranslationId = null; render(); requestAnimationFrame(() => document.querySelector(`#post-${id}`)?.scrollIntoView()); }));
   document.querySelectorAll("[data-favorite]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.favorite; favorites.has(id) ? favorites.delete(id) : favorites.add(id); localStorage.setItem("signal-favorites", JSON.stringify([...favorites])); render(); document.querySelector(`#post-${id}`).scrollIntoView(); }));
   document.querySelectorAll("[data-open]").forEach((button) => button.addEventListener("click", () => {
     const id = button.dataset.open;

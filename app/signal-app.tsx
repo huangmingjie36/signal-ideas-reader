@@ -8,7 +8,7 @@ type Tab = "feed" | "saved" | "authors";
 export function SignalApp({ posts }: { posts: Post[] }) {
   const [shuffledPosts, setShuffledPosts] = useState(posts);
   const [tab, setTab] = useState<Tab>("feed");
-  const [translated, setTranslated] = useState<Set<string>>(new Set());
+  const [activeTranslationId, setActiveTranslationId] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [activeIndex, setActiveIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(80);
@@ -50,14 +50,6 @@ export function SignalApp({ posts }: { posts: Post[] }) {
 
   const savedPosts = useMemo(() => shuffledPosts.filter((post) => favorites.has(post.id)), [favorites, shuffledPosts]);
 
-  function toggleTranslation(id: string) {
-    setTranslated((current) => {
-      const next = new Set(current);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
   function toggleFavorite(id: string) {
     const shouldSave = !favorites.has(id);
     setFavorites((current) => {
@@ -93,10 +85,9 @@ export function SignalApp({ posts }: { posts: Post[] }) {
                 <span><strong>{post.author}</strong>{post.handle}</span>
               </div>
 
-              <button className={`quote-area ${post.text.length > 220 ? "very-long" : post.text.length > 150 ? "long" : ""}`} onClick={() => toggleTranslation(post.id)} aria-label="显示或隐藏中文翻译">
+              <button className={`quote-area ${post.text.length > 220 ? "very-long" : post.text.length > 150 ? "long" : ""}`} onClick={() => setActiveTranslationId(post.id)} aria-label="查看完整中文翻译">
                 <p className="quote">{post.text}</p>
-                {translated.has(post.id) && <p className="translation" lang="zh-CN">{post.zh}</p>}
-                <span className="tap-hint">{translated.has(post.id) ? "轻点收起中文" : "轻点查看中文"}</span>
+                <span className="tap-hint">轻点查看完整中文</span>
               </button>
 
               <footer className="card-footer">
@@ -141,6 +132,20 @@ export function SignalApp({ posts }: { posts: Post[] }) {
           <div className="add-author"><strong>＋ 添加下一位作者</strong><span>结构已经准备好，之后只需给我作者账号。</span></div>
         </section>
       )}
+
+      {activeTranslationId && (() => {
+        const post = shuffledPosts.find((item) => item.id === activeTranslationId);
+        return post ? (
+          <section className="translation-sheet" role="dialog" aria-modal="true" aria-label="完整中文翻译">
+            <button className="translation-close" onClick={() => setActiveTranslationId(null)} aria-label="关闭中文翻译">×</button>
+            <div className="translation-content">
+              <span className="translation-label">中文全文</span>
+              <p className="translation-text" lang="zh-CN">{post.zh}</p>
+              <button className="translation-done" onClick={() => setActiveTranslationId(null)}>读完了</button>
+            </div>
+          </section>
+        ) : null;
+      })()}
 
       <nav className="bottom-nav" aria-label="主导航">
         <button className={`nav-button ${tab === "feed" ? "active" : ""}`} onClick={() => setTab("feed")}><span className="nav-icon">◉</span>阅读</button>
